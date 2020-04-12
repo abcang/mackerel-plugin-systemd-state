@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [ "$MACKEREL_AGENT_PLUGIN_META" = "1" ]; then
+   cat <<EOF
+# mackerel-agent-plugin
+{
+  "graphs": {
+    "systemd.running.#": {
+      "label": "Systemd Running State",
+      "unit": "integer",
+      "metrics": [
+        {
+          "name": "state",
+          "label": "state"
+        }
+      ]
+    }
+  }
+}
+EOF
+   exit 0
+fi
+
+if [ $# -eq 0 ]; then
+    echo "Usage: $(basename "$0") UNITNAME ..."
+    exit 1
+fi
+
+date=$(date +%s)
+
+for name in "$@"; do
+    if [ $(systemctl is-active "$name") == "active" ]; then
+        status=1
+    else
+        status=0
+    fi
+    echo -e "systemd.running.$name.state\t$status\t$date"
+done
